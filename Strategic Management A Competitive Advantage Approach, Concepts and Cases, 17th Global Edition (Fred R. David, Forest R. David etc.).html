@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>نقشه ذهنی - مدیریت استراتژیک: رویکرد مزیت رقابتی</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --font-primary: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Light Theme */
+            --color-bg-light: #f8f9fa;
+            --color-surface-light: #ffffff;
+            --color-primary-light: #4f46e5; /* Indigo */
+            --color-secondary-light: #6366f1;
+            --color-text-dark: #1F2937;
+            --color-text-light: #ffffff;
+            --node-border-light: #D1D5DB;
+            --link-color-light: #D1D5DB;
+            --highlight-stroke-light: #fbbf24;
+            --highlight-fill-light: rgba(251, 191, 36, 0.1);
+            /* Dark Theme */
+            --color-bg-dark: #111827;
+            --color-surface-dark: #1F2937;
+            --color-primary-dark: #818cf8;
+            --color-secondary-dark: #a5b4fc;
+            --color-text-dark-theme: #E5E7EB;
+            --color-text-light-dark-theme: #111827;
+            --node-border-dark: #4B5563;
+            --link-color-dark: #4B5563;
+            --highlight-stroke-dark: #f59e0b;
+            --highlight-fill-dark: rgba(245, 158, 11, 0.15);
+            /* Default to Light Theme */
+            --color-bg: var(--color-bg-light);
+            --color-surface: var(--color-surface-light);
+            --color-primary: var(--color-primary-light);
+            --color-secondary: var(--color-secondary-light);
+            --color-text-on-primary: var(--color-text-light);
+            --color-text-on-surface: var(--color-text-dark);
+            --node-border: var(--node-border-light);
+            --link-color: var(--link-color-light);
+            --highlight-stroke: var(--highlight-stroke-light);
+            --highlight-fill: var(--highlight-fill-light);
+        }
+        .dark {
+            --color-bg: var(--color-bg-dark);
+            --color-surface: var(--color-surface-dark);
+            --color-primary: var(--color-primary-dark);
+            --color-secondary: var(--color-secondary-dark);
+            --color-text-on-primary: var(--color-text-light-dark-theme);
+            --color-text-on-surface: var(--color-text-dark-theme);
+            --node-border: var(--node-border-dark);
+            --link-color: var(--link-color-dark);
+            --highlight-stroke: var(--highlight-stroke-dark);
+            --highlight-fill: var(--highlight-fill-dark);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-primary);
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text-on-surface);
+            direction: rtl;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.ltr { direction: ltr; }
+        .container {
+            width: 100%;
+            height: 100%;
+            background: var(--color-surface);
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s;
+        }
+        .container:fullscreen {
+            height: 100vh;
+        }
+        .container:fullscreen header,
+        .container:fullscreen .description,
+        .container:fullscreen footer {
+            display: none;
+        }
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: var(--color-text-on-primary);
+            padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .subtitle { font-size: 1rem; opacity: 0.9; }
+        .description {
+            padding: 15px;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--node-border);
+            line-height: 1.8;
+            flex-shrink: 0;
+            overflow-y: auto;
+            max-height: 150px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .description p { 
+            text-align: right; 
+            margin-bottom: 10px;
+        }
+        .description p:last-child {
+             margin-bottom: 0;
+        }
+        body.ltr .description p { 
+            text-align: left; 
+        }
+        .controls {
+            padding: 10px;
+            background: var(--color-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid var(--node-border);
+            flex-shrink: 0;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+        }
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        #search-input {
+            border: 1px solid var(--node-border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 14px;
+            background-color: var(--color-surface);
+            color: var(--color-text-on-surface);
+            transition: all 0.3s;
+            width: 100%;
+        }
+        #search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        .dark #search-input:focus {
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+        button {
+            background: var(--color-secondary);
+            color: var(--color-text-on-primary);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        button:hover {
+            background: var(--color-primary);
+            transform: translateY(-2px);
+        }
+        button.active {
+            background: var(--color-primary);
+        }
+        #mindmap-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--color-bg);
+            min-height: 0;
+            transition: background-color 0.3s;
+        }
+        #mindmap-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .node rect {
+            cursor: pointer;
+            stroke: var(--node-border);
+            fill: var(--color-surface);
+            stroke-width: 1.5px;
+            rx: 8;
+            ry: 8;
+            transition: all 0.3s ease;
+        }
+        .node.highlighted > rect {
+            stroke: var(--highlight-stroke);
+            fill: var(--highlight-fill);
+            stroke-width: 2.5px;
+        }
+        .node .node-text {
+            font-size: 14px;
+            pointer-events: none;
+            fill: var(--color-text-on-surface);
+        }
+        .node .farsi-text {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .node-main rect {
+            fill: var(--color-primary);
+        }
+        .node-main .node-text {
+            fill: var(--color-text-on-primary);
+            font-weight: bold;
+        }
+        .link {
+            fill: none;
+            stroke: var(--link-color);
+            stroke-opacity: 0.8;
+            stroke-width: 2px;
+            transition: stroke 0.3s;
+        }
+        .toggle-circle {
+            cursor: pointer;
+            stroke: var(--color-secondary);
+            stroke-width: 1.5px;
+            fill: var(--color-surface);
+        }
+        .toggle-plus {
+             fill: var(--color-text-on-surface);
+        }
+        footer {
+            text-align: center;
+            padding: 15px 10px;
+            background: var(--color-secondary);
+            color: var(--color-text-on-primary);
+            font-size: 14px;
+            flex-shrink: 0;
+            transition: background 0.3s, color 0.3s;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .footer-link {
+            color: var(--color-text-on-primary);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s, text-decoration 0.3s;
+        }
+        .footer-link:hover {
+            color: var(--color-text-on-primary);
+            text-decoration: underline;
+            opacity: 0.9;
+        }
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            .controls {
+                gap: 8px;
+                padding: 8px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .button-group, .search-group {
+                justify-content: center;
+                width: 100%;
+            }
+            #search-input {
+                flex-grow: 1;
+            }
+            button {
+                padding: 6px 8px;
+                font-size: 11px;
+                gap: 4px;
+                flex-grow: 1;
+            }
+            .button-group button {
+                flex-basis: auto;
+            }
+            .description {
+                max-height: 100px;
+                padding: 10px;
+                font-size: 12px;
+            }
+            footer {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <header>
+            <h1>مدیریت استراتژیک: رویکرد مزیت رقابتی</h1>
+            <div class="subtitle">Strategic Management: A Competitive Advantage Approach</div>
+        </header>
+        <div class="description">
+            <p>این نقشه ذهنی، ساختار کامل کتاب «مدیریت استراتژیک: رویکرد مزیت رقابتی» نوشته فرد ر. دیوید و همکاران را به تصویر می‌کشد و تمام مفاهیم، اصول، فصول، تعاریف و چارچوب‌های برنامه‌ریزی استراتژیک را پوشش می‌دهد.</p>
+            <p>This mind map illustrates the complete structure of "Strategic Management: A Competitive Advantage Approach" by Fred R. David and Forest R. David, covering all concepts, principles, chapters, definitions, and strategic planning frameworks.</p>
+        </div>
+        <div class="controls">
+            <div class="search-group">
+                <input type="text" id="search-input" placeholder="جستجو در نقشه...">
+                <button id="btn-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+                <button id="btn-clear-search" style="display: none;">پاک کردن</button>
+            </div>
+            <div class="button-group">
+                <button id="btn-expand-all">باز کردن همه</button>
+                <button id="btn-collapse-all">بستن همه</button>
+                <button id="btn-fullscreen">
+                    <svg id="fullscreen-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <span id="fullscreen-text">تمام‌صفحه</span>
+                </button>
+                <button id="btn-export-freemind">خروجی FreeMind</button>
+            </div>
+            <div class="button-group">
+                <button id="btn-theme-toggle">
+                    <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+                </button>
+                <button id="btn-en">English</button>
+                <button id="btn-fa">فارسی</button>
+                <button id="btn-both" class="active">دو زبانه</button>
+            </div>
+        </div>
+        <div id="mindmap-container">
+            <svg id="mindmap-svg"></svg>
+        </div>
+        <footer>
+            <p>نقشه ذهنی مدیریت استراتژیک: رویکرد مزیت رقابتی | <a href="https://saadattalab.ir/" class="footer-link" target="_blank">وبسایت شخصی سعید سعادت‌طلب</a></p>
+        </footer>
+    </div>
+    <script>
+        window.onload = function() {
+            const mindmapData = {
+                name: "Strategic Management: A Competitive Advantage Approach",
+                farsi: "مدیریت استراتژیک: رویکرد مزیت رقابتی",
+                children: [
+                    {
+                        name: "Part One: Basic Concepts",
+                        farsi: "بخش اول: مفاهیم پایه",
+                        children: [
+                            {
+                                name: "Chapter 1: The Nature of Strategic Management",
+                                farsi: "فصل ۱: ماهیت مدیریت استراتژیک",
+                                children: [
+                                    {
+                                        name: "The Strategic-Management Process",
+                                        farsi: "فرآیند مدیریت استراتژیک",
+                                        definition: "A continuous process of formulating, implementing, and evaluating strategies to achieve organizational goals.",
+                                        definitionFa: "فرآیندی مداوم برای صورتبندی، اجرای و ارزیابی استراتژی‌ها جهت دستیابی به اهداف سازمانی."
+                                    },
+                                    {
+                                        name: "Why Strategy is Important",
+                                        farsi: "اهمیت استراتژی",
+                                        children: [
+                                            { name: "Provides Direction", farsi: "ارائه جهت‌گیری", definition: "Establishes long-term goals and outlines how to achieve them.", definitionFa: "تعیین اهداف بلندمدت و ترسیم چگونگی دستیابی به آن‌ها." },
+                                            { name: "Enhances Decision Making", farsi: "تقویت تصمیم‌گیری", definition: "Enables better resource allocation and prioritization.", definitionFa: "امکان تخصیص بهتر منابع و اولویت‌بندی را فراهم می‌کند." },
+                                            { name: "Improves Performance", farsi: "بهبود عملکرد", definition: "Leads to higher profitability and competitive advantage.", definitionFa: "منجر به سودآوری بالاتر و مزیت رقابتی می‌شود." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Vision and Mission",
+                                        farsi: "چشم‌انداز و مأموریت",
+                                        children: [
+                                            { name: "Vision Statement", farsi: "بیانیه چشم‌انداز", definition: "Defines what an organization wants to become in the future.", definitionFa: "تعریف اینکه یک سازمان در آینده چه خواهد شد." },
+                                            { name: "Mission Statement", farsi: "بیانیه مأموریت", definition: "Defines the business purpose, products/services, markets, technology, philosophy, self-concept, concern for public image, and concern for employees.", definitionFa: "تعریف هدف تجاری، محصولات/خدمات، بازارها، فناوری، فلسفه، مفهوم خود، نگرانی درباره تصویر عمومی و نگرانی درباره کارکنان." }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 2: Business Vision and Mission",
+                                farsi: "فصل ۲: چشم‌انداز و مأموریت کسب‌وکار",
+                                children: [
+                                    {
+                                        name: "Components of a Mission Statement",
+                                        farsi: "اجزای بیانیه مأموریت",
+                                        children: [
+                                            { name: "Customers", farsi: "مشتریان", definition: "Who are the firm's customers?", definitionFa: "مشتریان سازمان کیستند؟" },
+                                            { name: "Products or Services", farsi: "محصولات یا خدمات", definition: "What are the firm's major products or services?", definitionFa: "محصولات یا خدمات اصلی سازمان چیست؟" },
+                                            { name: "Markets", farsi: "بازارها", definition: "Geographic area of operation.", definitionFa: "منطقه جغرافیایی عملیات." },
+                                            { name: "Technology", farsi: "فناوری", definition: "Commitment to technological leadership.", definitionFa: "تعهد به رهبری فناوری." },
+                                            { name: "Concern for Survival", farsi: "نگرانی درباره بقا", definition: "Growth, profitability, and financial soundness.", definitionFa: "رشد، سودآوری و سلامت مالی." },
+                                            { name: "Philosophy", farsi: "فلسفه", definition: "Basic beliefs, values, aspirations, and ethical priorities.", definitionFa: "اعتقادات اساسی، ارزش‌ها، آرزوها و اولویت‌های اخلاقی." },
+                                            { name: "Self-Concept", farsi: "مفهوم خود", definition: "Distinctive competence or competitive advantage.", definitionFa: "توانایی ممتاز یا مزیت رقابتی." },
+                                            { name: "Concern for Public Image", farsi: "نگرانی درباره تصویر عمومی", definition: "Responsibility to stakeholders.", definitionFa: "مسئولیت در قبال ذینفعان." },
+                                            { name: "Concern for Employees", farsi: "نگرانی درباره کارکنان", definition: "Human resources as most valuable asset.", definitionFa: "منابع انسانی به عنوان ارزشمندترین دارایی." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Characteristics of Effective Mission Statements",
+                                        farsi: "ویژگی‌های بیانیه‌های مأموریت مؤثر",
+                                        children: [
+                                            { name: "Clarity", farsi: "وضوح", definition: "Clear, concise, and easily understood.", definitionFa: "شفاف، مختصر و به راحتی قابل درک." },
+                                            { name: "Motivation", farsi: "انگیزش", definition: "Inspires enthusiasm and commitment.", definitionFa: "شوق و تعهد را برانگیخته می‌کند." },
+                                            { name: "Realism", farsi: "واقع‌گرایی", definition: "Achievable and consistent with capabilities.", definitionFa: "قابل دستیابی و سازگار با توانایی‌ها." },
+                                            { name: "Specificity", farsi: "جزئی‌بودن", definition: "Avoids vague terms like 'best' or 'leader'.", definitionFa: "از اصطلاحات مبهم مانند 'بهترین' یا 'رهبر' اجتناب می‌کند." },
+                                            { name: "Reconciliatory", farsi: "تسکین‌دهنده", definition: "Balances conflicting interests of stakeholders.", definitionFa: "تعادل بین منافع متضاد ذینفعان برقرار می‌کند." }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Two: Strategy Formulation",
+                        farsi: "بخش دوم: صورتبندی استراتژی",
+                        children: [
+                            {
+                                name: "Chapter 3: The External Assessment",
+                                farsi: "فصل ۳: ارزیابی بیرونی",
+                                children: [
+                                    {
+                                        name: "External Environment Analysis",
+                                        farsi: "تحلیل محیط بیرونی",
+                                        children: [
+                                            { name: "Economic Forces", farsi: "عوامل اقتصادی", definition: "Interest rates, inflation, unemployment, GDP, etc.", definitionFa: "نرخ بهره، تورم، بیکاری، تولید ناخالص داخلی و غیره." },
+                                            { name: "Social, Cultural, Demographic, and Natural Environment Forces", farsi: "عوامل اجتماعی، فرهنگی، جمعیت‌شناختی و طبیعی", definition: "Lifestyle changes, population growth, environmental regulations.", definitionFa: "تغییرات سبک زندگی، رشد جمعیت، مقررات محیط زیست." },
+                                            { name: "Political, Governmental, and Legal Forces", farsi: "عوامل سیاسی، دولتی و قانونی", definition: "Taxation, antitrust legislation, deregulation.", definitionFa: "مالیات، قانون مربوط به انحصار، لغو مقررات." },
+                                            { name: "Technological Forces", farsi: "عوامل فناوری", definition: "Innovation, automation, R&D, internet.", definitionFa: "نوآوری، اتوماسیون، تحقیق و توسعه، اینترنت." },
+                                            { name: "Competitive Forces", farsi: "عوامل رقابتی", definition: "Rivalry among existing firms, threat of new entrants, bargaining power of buyers, bargaining power of suppliers, threat of substitutes.", definitionFa: "رقابت بین رقبای موجود، تهدید ورود رقبای جدید، قدرت چانه‌زنی خریداران، قدرت چانه‌زنی تأمین‌کنندگان، تهدید جایگزین‌ها." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Identifying Opportunities and Threats",
+                                        farsi: "شناسایی فرصت‌ها و تهدیدها",
+                                        definition: "Opportunities arise when external factors favorably impact the firm. Threats arise when external factors unfavorably impact the firm.",
+                                        definitionFa: "فرصت‌ها زمانی پدید می‌آیند که عوامل بیرونی به نفع شرکت تأثیر بگذارند. تهدیدها زمانی پدید می‌آیند که عوامل بیرونی به ضرر شرکت تأثیر بگذارند."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 4: The Internal Assessment",
+                                farsi: "فصل ۴: ارزیابی داخلی",
+                                children: [
+                                    {
+                                        name: "Internal Factors Evaluation (IFE) Matrix",
+                                        farsi: "ماتریس ارزیابی عوامل داخلی (IFE)",
+                                        definition: "A tool that lists key internal strengths and weaknesses, assigns weights and ratings, and calculates weighted scores to assess a firm's internal situation.",
+                                        definitionFa: "ابزاری که نقاط قوت و ضعف داخلی کلیدی را فهرست می‌کند، وزن و امتیاز اختصاص می‌دهد و نمرات وزنی را محاسبه می‌کند تا وضعیت داخلی شرکت ارزیابی شود."
+                                    },
+                                    {
+                                        name: "Functional Area Strengths and Weaknesses",
+                                        farsi: "نقاط قوت و ضعف حوزه‌های عملیاتی",
+                                        children: [
+                                            { name: "Management", farsi: "مدیریت", definition: "Leadership, organizational structure, planning systems.", definitionFa: "رهبری، ساختار سازمانی، سیستم‌های برنامه‌ریزی." },
+                                            { name: "Marketing", farsi: "بازاریابی", definition: "Market share, product quality, pricing strategy, distribution channels.", definitionFa: "سهم بازار، کیفیت محصول، استراتژی قیمت‌گذاری، کانال‌های توزیع." },
+                                            { name: "Finance/Accounting", farsi: "مالی/حسابداری", definition: "Financial ratios, budgeting, cost control, capital structure.", definitionFa: "نسبت‌های مالی، بودجه‌بندی، کنترل هزینه، ساختار سرمایه." },
+                                            { name: "Production/Operations", farsi: "تولید/عملیات", definition: "Capacity utilization, inventory control, quality control, supply chain management.", definitionFa: "استفاده از ظرفیت، کنترل موجودی، کنترل کیفیت، مدیریت زنجیره تأمین." },
+                                            { name: "Research and Development (R&D)", farsi: "تحقیق و توسعه (R&D)", definition: "New product development, innovation rate, patents.", definitionFa: "توسعه محصولات جدید، نرخ نوآوری، ثبت اختراعات." },
+                                            { name: "Computer Information Systems (CIS)", farsi: "سیستم‌های اطلاعات رایانه‌ای (CIS)", definition: "IT infrastructure, data security, e-commerce capabilities.", definitionFa: "زیرساخت فناوری اطلاعات، امنیت داده‌ها، قابلیت‌های تجارت الکترونیک." }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 5: Strategies in Action",
+                                farsi: "فصل ۵: استراتژی‌ها در عمل",
+                                children: [
+                                    {
+                                        name: "Types of Strategies",
+                                        farsi: "انواع استراتژی‌ها",
+                                        children: [
+                                            { name: "Intensive Strategies", farsi: "استراتژی‌های تشدیدشده", children: [
+                                                { name: "Market Penetration", farsi: "نفوذ به بازار", definition: "Increase market share for current products in current markets.", definitionFa: "افزایش سهم بازار برای محصولات فعلی در بازارهای فعلی." },
+                                                { name: "Market Development", farsi: "توسعه بازار", definition: "Introduce current products into new geographic areas.", definitionFa: "معرفی محصولات فعلی به مناطق جغرافیایی جدید." },
+                                                { name: "Product Development", farsi: "توسعه محصول", definition: "Create new products for present markets.", definitionFa: "ایجاد محصولات جدید برای بازارهای فعلی." }
+                                            ]},
+                                            { name: "Integrative Strategies", farsi: "استراتژی‌های یکپارچه", children: [
+                                                { name: "Forward Integration", farsi: "یکپارچه‌سازی پیش‌رو", definition: "Gain ownership or increased control over distributors or retailers.", definitionFa: "دستیابی به مالکیت یا کنترل بیشتر بر توزیع‌کنندگان یا خرده‌فروشان." },
+                                                { name: "Backward Integration", farsi: "یکپارچه‌سازی عقب‌رو", definition: "Gain ownership or increased control over suppliers.", definitionFa: "دستیابی به مالکیت یا کنترل بیشتر بر تأمین‌کنندگان." },
+                                                { name: "Horizontal Integration", farsi: "یکپارچه‌سازی افقی", definition: "Gain ownership or increased control over competitors.", definitionFa: "دستیابی به مالکیت یا کنترل بیشتر بر رقبا." }
+                                            ]},
+                                            { name: "Diversification Strategies", farsi: "استراتژی‌های تنوع‌بخشی", children: [
+                                                { name: "Concentric Diversification", farsi: "تنوع‌بخشی هم‌محور", definition: "Add related products or services.", definitionFa: "افزودن محصولات یا خدمات مرتبط." },
+                                                { name: "Conglomerate Diversification", farsi: "تنوع‌بخشی انبوه", definition: "Add unrelated products or services.", definitionFa: "افزودن محصولات یا خدمات نامرتبط." },
+                                                { name: "Horizontal Diversification", farsi: "تنوع‌بخشی افقی", definition: "Add new, technologically unrelated products or services to current customers.", definitionFa: "افزودن محصولات یا خدمات فناوری‌ای نامرتبط به مشتریان فعلی." }
+                                            ]},
+                                            { name: "Defensive Strategies", farsi: "استراتژی‌های دفاعی", children: [
+                                                { name: "Retrenchment", farsi: "کاهش مقیاس", definition: "Reduce costs and assets to reverse declining sales and profits.", definitionFa: "کاهش هزینه‌ها و دارایی‌ها برای معکوس کردن فروش و سود در حال کاهش." },
+                                                { name: "Divestiture", farsi: "تصفیه", definition: "Sell a division or part of an organization.", definitionFa: "فروش یک بخش یا بخشی از سازمان." },
+                                                { name: "Liquidation", farsi: "تصفیه کامل", definition: "Sell all of a company's assets in parts.", definitionFa: "فروش تمام دارایی‌های یک شرکت به صورت قطعات." }
+                                            ]}
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 6: Strategy Analysis and Choice",
+                                farsi: "فصل ۶: تحلیل و انتخاب استراتژی",
+                                children: [
+                                    {
+                                        name: "The Quantitative Strategic Planning Matrix (QSPM)",
+                                        farsi: "ماتریس برنامه‌ریزی استراتژیک کمّی (QSPM)",
+                                        definition: "An analytical tool that objectively indicates which alternative strategies are best by using input from other strategy-formulation techniques.",
+                                        definitionFa: "ابزاری تحلیلی که به طور عینی نشان می‌دهد کدام استراتژی‌های جایگزین بهتر هستند با استفاده از ورودی از تکنیک‌های دیگر صورتبندی استراتژی."
+                                    },
+                                    {
+                                        name: "Matching Stage Matrices",
+                                        farsi: "ماتریس‌های مرحله تطبیق",
+                                        children: [
+                                            { name: "SWOT Matrix", farsi: "ماتریس SWOT", definition: "Matches internal strengths and weaknesses with external opportunities and threats to generate four types of strategies: SO (Maxi-Maxi), WO (Mini-Maxi), ST (Maxi-Mini), WT (Mini-Mini).", definitionFa: "تطبیق نقاط قوت و ضعف داخلی با فرصت‌ها و تهدیدهای بیرونی برای تولید چهار نوع استراتژی: SO (حداکثر-حداکثر)، WO (حداقل-حداکثر)، ST (حداکثر-حداقل)، WT (حداقل-حداقل)." },
+                                            { name: "SPACE Matrix", farsi: "ماتریس SPACE", definition: "Uses four dimensions—Financial Strength (FS), Competitive Advantage (CA), Environmental Stability (ES), and Industry Attractiveness (IA)—to determine whether aggressive, conservative, defensive, or competitive strategies are appropriate.", definitionFa: "از چهار بعد—قدرت مالی (FS)، مزیت رقابتی (CA)، ثبات محیطی (ES) و جذابیت صنعت (IA)—استفاده می‌کند تا تعیین کند کدام استراتژی‌ها مناسب هستند: تهاجمی، محافظه‌کارانه، دفاعی یا رقابتی." },
+                                            { name: "BCG Matrix", farsi: "ماتریس BCG", definition: "Classifies divisions based on market growth rate and relative market share into Cash Cows, Stars, Question Marks, and Dogs.", definitionFa: "واحدها را بر اساس نرخ رشد بازار و سهم بازار نسبی به گاوها، ستاره‌ها، علامت سؤال‌ها و سگ‌ها تقسیم‌بندی می‌کند." },
+                                            { name: "IE Matrix", farsi: "ماتریس IE", definition: "Uses total weighted scores from IFE and EFE matrices to place divisions in nine cells indicating recommended strategies.", definitionFa: "از نمرات وزنی کل ماتریس‌های IFE و EFE استفاده می‌کند تا واحدها را در نه سلول قرار دهد که استراتژی‌های توصیه‌شده را نشان می‌دهد." },
+                                            { name: "Grand Strategy Matrix", farsi: "ماتریس استراتژی کلان", definition: "Uses market growth and competitive position to classify firms into four quadrants with recommended strategies.", definitionFa: "از رشد بازار و موقعیت رقابتی برای طبقه‌بندی شرکت‌ها در چهار ربع با استراتژی‌های توصیه‌شده استفاده می‌کند." }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Three: Strategy Implementation",
+                        farsi: "بخش سوم: اجرای استراتژی",
+                        children: [
+                            {
+                                name: "Chapter 7: Implementing Strategies: Management and Marketing Issues",
+                                farsi: "فصل ۷: اجرای استراتژی‌ها: مسائل مدیریت و بازاریابی",
+                                children: [
+                                    {
+                                        name: "Organizational Structure",
+                                        farsi: "ساختار سازمانی",
+                                        children: [
+                                            { name: "Functional Structure", farsi: "ساختار وظیفه‌ای", definition: "Groups people by specialized functions such as marketing, finance, operations.", definitionFa: "افراد را بر اساس وظایف تخصصی مانند بازاریابی، مالی، عملیات گروه‌بندی می‌کند." },
+                                            { name: "Divisional Structure", farsi: "ساختار تقسیم‌بندی شده", definition: "Groups people by product, geography, or customer.", definitionFa: "افراد را بر اساس محصول، جغرافیا یا مشتری گروه‌بندی می‌کند." },
+                                            { name: "Matrix Structure", farsi: "ساختار ماتریسی", definition: "Combines functional and divisional structures, creating dual reporting relationships.", definitionFa: "ترکیب ساختارهای وظیفه‌ای و تقسیم‌بندی شده، ایجاد روابط گزارش دوگانه." },
+                                            { name: "Team Structure", farsi: "ساختار تیمی", definition: "Employs permanent and temporary teams to accomplish tasks.", definitionFa: "از تیم‌های دائمی و موقت برای انجام وظایف استفاده می‌کند." },
+                                            { name: "Network Structure", farsi: "ساختار شبکه‌ای", definition: "Relies heavily on outsourcing and strategic alliances.", definitionFa: "به شدت به برون‌سپاری و اتحادهای استراتژیک متکی است." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Leadership and Organizational Culture",
+                                        farsi: "رهبری و فرهنگ سازمانی",
+                                        children: [
+                                            { name: "Leadership Styles", farsi: "سبک‌های رهبری", definition: "Transformational, transactional, servant, autocratic, democratic, laissez-faire.", definitionFa: "تبدیل‌گرا، مبادله‌ای، خدمتگذار، خودکامه، دموکراتیک، بی‌تفاوت." },
+                                            { name: "Strategy-Supportive Culture", farsi: "فرهنگ حمایت‌کننده از استراتژی", definition: "A culture that reinforces desired behaviors and attitudes aligned with the chosen strategy.", definitionFa: "فرهنگی که رفتارها و نگرش‌های مطلوب همسو با استراتژی انتخابی را تقویت می‌کند." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Marketing Implementation",
+                                        farsi: "اجرای بازاریابی",
+                                        children: [
+                                            { name: "Market Segmentation", farsi: "تقسیم‌بندی بازار", definition: "Dividing a market into distinct groups of buyers who have different needs, characteristics, or behaviors.", definitionFa: "تقسیم بازار به گروه‌های مجزای خریداران که نیازها، ویژگی‌ها یا رفتارهای متفاوتی دارند." },
+                                            { name: "Target Market Selection", farsi: "انتخاب بازار هدف", definition: "Evaluating each segment's attractiveness and selecting one or more segments to enter.", definitionFa: "ارزیابی جذابیت هر بخش و انتخاب یک یا چند بخش برای ورود." },
+                                            { name: "Product Positioning", farsi: "موقعیت‌یابی محصول", definition: "Arranging for a product to occupy a clear, distinctive, and desirable place relative to competing products in the minds of target consumers.", definitionFa: "ترتیب دادن برای اینکه محصول جایگاهی واضح، متمایز و مطلوب نسبت به محصولات رقیب در ذهن مصرف‌کنندگان هدف داشته باشد." }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 8: Implementing Strategies: Finance and Accounting Issues",
+                                farsi: "فصل ۸: اجرای استراتژی‌ها: مسائل مالی و حسابداری",
+                                children: [
+                                    {
+                                        name: "Project Cost-Benefit Analysis",
+                                        farsi: "تحلیل هزینه-فایده پروژه",
+                                        definition: "Estimating the costs and benefits of a proposed project to determine its feasibility.",
+                                        definitionFa: "تخمین هزینه‌ها و منافع یک پروژه پیشنهادی برای تعیین امکان‌پذیری آن."
+                                    },
+                                    {
+                                        name: "Projected Financial Statements",
+                                        farsi: "صورت‌های مالی پیش‌بینی‌شده",
+                                        children: [
+                                            { name: "Income Statement", farsi: "صورت سود و زیان", definition: "Projects revenues, expenses, and net income.", definitionFa: "درآمدها، هزینه‌ها و سود خالص را پیش‌بینی می‌کند." },
+                                            { name: "Balance Sheet", farsi: "ترازنامه", definition: "Projects assets, liabilities, and owners' equity at a point in time.", definitionFa: "دارایی‌ها، بدهی‌ها و حقوق مالکان را در یک نقطه زمانی پیش‌بینی می‌کند." },
+                                            { name: "Cash Flow Statement", farsi: "صورت جریان نقدی", definition: "Projects cash inflows and outflows from operating, investing, and financing activities.", definitionFa: "ورودی‌ها و خروجی‌های نقدی ناشی از فعالیت‌های عملیاتی، سرمایه‌گذاری و تأمین مالی را پیش‌بینی می‌کند." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Business Valuation Methods",
+                                        farsi: "روش‌های ارزش‌گذاری کسب‌وکار",
+                                        children: [
+                                            { name: "Price-Earnings Ratio Method", farsi: "روش نسبت قیمت به سود", definition: "Multiplies earnings per share by the industry average P/E ratio.", definitionFa: "سود هر سهم را در نسبت متوسط قیمت به سود صنعت ضرب می‌کند." },
+                                            { name: "Present Value of Future Dividends", farsi: "ارزش فعلی سودهای سهام آتی", definition: "Discounts expected future dividends to their present value.", definitionFa: "سودهای سهام مورد انتظار آتی را به ارزش فعلی تنزیل می‌کند." },
+                                            { name: "Discounted Cash Flow Method", farsi: "روش جریان نقدی تنزیل‌شده", definition: "Discounts expected future cash flows to their present value.", definitionFa: "جریان‌های نقدی مورد انتظار آتی را به ارزش فعلی تنزیل می‌کند." }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Four: Strategy Evaluation and Governance",
+                        farsi: "بخش چهارم: ارزیابی استراتژی و حکمرانی",
+                        children: [
+                            {
+                                name: "Chapter 9: Strategy Evaluation and Governance",
+                                farsi: "فصل ۹: ارزیابی استراتژی و حکمرانی",
+                                children: [
+                                    {
+                                        name: "Criteria for Evaluating Strategies",
+                                        farsi: "معیارهای ارزیابی استراتژی‌ها",
+                                        children: [
+                                            { name: "Suitability", farsi: "تناسب", definition: "Does the strategy address the key issues identified in the analysis?", definitionFa: "آیا استراتژی به مسائل کلیدی شناسایی شده در تحلیل می‌پردازد؟" },
+                                            { name: "Acceptability", farsi: "پذیرش", definition: "Are the expected results acceptable in terms of returns and risk?", definitionFa: "آیا نتایج مورد انتظار از نظر بازده و ریسک قابل قبول هستند؟" },
+                                            { name: "Feasibility", farsi: "امکان‌پذیری", definition: "Do the firm's resources and capabilities enable it to carry out the strategy?", definitionFa: "آیا منابع و توانایی‌های شرکت امکان اجرای استراتژی را فراهم می‌کند؟" }
+                                        ]
+                                    },
+                                    {
+                                        name: "Controlling the Strategy Process",
+                                        farsi: "کنترل فرآیند استراتژی",
+                                        children: [
+                                            { name: "Measuring Performance", farsi: "اندازه‌گیری عملکرد", definition: "Comparing actual results to planned objectives using metrics.", definitionFa: "مقایسه نتایج واقعی با اهداف برنامه‌ریزی‌شده با استفاده از معیارها." },
+                                            { name: "Taking Corrective Actions", farsi: "اقدامات اصلاحی", definition: "Modifying strategies, objectives, or assumptions if performance is unsatisfactory.", definitionFa: "اصلاح استراتژی‌ها، اهداف یا فرضیات در صورت عدم رضایت از عملکرد." },
+                                            { name: "Auditing", farsi: "حسابرسی", definition: "A systematic examination of the effectiveness of the strategic-management process.", definitionFa: "بررسی نظام‌مند اثربخشی فرآیند مدیریت استراتژیک." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Balanced Scorecard",
+                                        farsi: "کارت امتیازی متوازن",
+                                        definition: "A performance measurement framework that includes financial, customer, internal process, and learning & growth perspectives.",
+                                        definitionFa: "چارچوبی برای اندازه‌گیری عملکرد که شامل ابعاد مالی، مشتری، فرآیند داخلی و یادگیری و رشد است."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Key Concepts and Tools",
+                        farsi: "مفاهیم و ابزارهای کلیدی",
+                        children: [
+                            {
+                                name: "The Integrative Model of Strategic Management",
+                                farsi: "مدل یکپارچه مدیریت استراتژیک",
+                                definition: "A model that integrates the stages of strategy formulation, implementation, and evaluation into a continuous loop.",
+                                definitionFa: "مدلی که مراحل صورتبندی، اجرا و ارزیابی استراتژی را در یک حلقه مداوم یکپارچه می‌کند."
+                            },
+                            {
+                                name: "Assurance-of-Learning Exercises",
+                                farsi: "تمرین‌های تضمین یادگیری",
+                                definition: "Practical exercises designed to apply chapter concepts to real-world scenarios.",
+                                definitionFa: "تمرین‌های عملی طراحی‌شده برای اعمال مفاهیم فصل در سناریوهای دنیای واقعی."
+                            },
+                            {
+                                name: "Case Analysis Guidelines",
+                                farsi: "راهنمای تحلیل موردی",
+                                children: [
+                                    { name: "Be Practical", farsi: "عملی باشید", definition: "Make reasonable assumptions when information is lacking.", definitionFa: "فرضیات منطقی انجام دهید وقتی اطلاعات کافی وجود ندارد." },
+                                    { name: "Be Thorough", farsi: "کامل باشید", definition: "Consider all relevant factors and analyses.", definitionFa: "تمام عوامل و تحلیل‌های مرتبط را در نظر بگیرید." },
+                                    { name: "Be Specific", farsi: "خاص باشید", definition: "Avoid vague recommendations; use numbers and percentages.", definitionFa: "از توصیه‌های مبهم پرهیز کنید؛ از اعداد و درصدها استفاده کنید." },
+                                    { name: "Be Original", farsi: "خلاق باشید", definition: "Offer unique insights and solutions.", definitionFa: "بینش‌ها و راه‌حل‌های منحصر به فرد ارائه دهید." },
+                                    { name: "Be Prescriptive", farsi: "دستوری باشید", definition: "Recommend specific actions rather than just describing situations.", definitionFa: "اقدامات خاصی را توصیه کنید نه اینکه فقط شرایط را توصیف کنید." }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            let currentLanguage = 'both';
+            let i = 0;
+            const duration = 750;
+            let root;
+            const container = d3.select("#mindmap-container");
+            const svg = container.select("svg");
+            const g = svg.append("g");
+            let width, height;
+            const tree = d3.tree().nodeSize([140, 320]);
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 3])
+                .on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                });
+            svg.call(zoom);
+
+            function initialize() {
+                width = container.node().getBoundingClientRect().width;
+                height = container.node().getBoundingClientRect().height;
+                root = d3.hierarchy(mindmapData, d => d.children);
+                root.x0 = height / 2;
+                root.y0 = 0;
+                root.children?.forEach(collapse);
+                update(root);
+                centerView();
+            }
+
+            function centerView() {
+                if(!width || !height) return;
+                const initialScale = window.innerWidth < 768 ? 0.3 : 0.6;
+                const initialTranslateX = window.innerWidth < 768 ? width * 0.1 : width / 5;
+                svg.call(zoom.transform, d3.zoomIdentity.translate(initialTranslateX, height / 2).scale(initialScale));
+            }
+
+            function update(source) {
+                const treeLayout = tree(root);
+                const nodes = treeLayout.descendants();
+                const links = treeLayout.links();
+                nodes.forEach(d => { d.y = d.depth * 300; });
+
+                const node = g.selectAll("g.node")
+                    .data(nodes, d => d.id || (d.id = ++i));
+
+                const nodeEnter = node.enter().append("g")
+                    .attr("class", d => `node ${d.children ? "node--internal" : "node--leaf"} ${d.depth === 0 ? 'node-main' : ''}`)
+                    .attr("transform", d => `translate(${source.y0},${source.x0})`)
+                    .on("click", click);
+
+                nodeEnter.append("rect")
+                    .attr("width", 260)
+                    .attr("height", 85)
+                    .attr("x", -130)
+                    .attr("y", -42.5);
+
+                const textEnter = nodeEnter.append("text")
+                    .attr("class", "node-text")
+                    .attr("dy", "-0.5em")
+                    .attr("text-anchor", "middle");
+                updateText(textEnter);
+
+                const toggleEnter = nodeEnter.filter(d => d.children || d._children);
+                const toggleGroup = toggleEnter.append('g')
+                    .attr('class', 'toggle-group')
+                    .attr('transform', `translate(135, 0)`);
+                toggleGroup.append("circle")
+                    .attr("class", "toggle-circle")
+                    .attr("r", 13);
+                toggleGroup.append("text")
+                    .attr("class", "toggle-plus")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.3em")
+                    .attr("font-size", "20px")
+                    .text(d => d.children ? "−" : "+");
+
+                const nodeUpdate = nodeEnter.merge(node);
+                nodeUpdate.transition()
+                    .duration(duration)
+                    .attr("transform", d => `translate(${d.y},${d.x})`);
+                updateText(nodeUpdate.select('text'));
+                nodeUpdate.select('.toggle-group text')
+                   .text(d => d.children ? "−" : "+");
+
+                const nodeExit = node.exit().transition()
+                    .duration(duration)
+                    .attr("transform", d => `translate(${source.y},${source.x})`)
+                    .remove();
+                nodeExit.select("rect").style("opacity", 1e-6);
+                nodeExit.select("text").style("opacity", 1e-6);
+
+                const link = g.selectAll("path.link")
+                    .data(links, d => d.target.id);
+                const linkEnter = link.enter().insert("path", "g")
+                    .attr("class", "link")
+                    .attr("d", d => {
+                        const o = {x: source.x0, y: source.y0};
+                        return diagonal(o, o);
+                    });
+                link.merge(linkEnter).transition()
+                    .duration(duration)
+                    .attr("d", d => diagonal(d.source, d.target));
+                link.exit().transition()
+                    .duration(duration)
+                    .attr("d", d => {
+                        const o = {x: source.x, y: source.y};
+                        return diagonal(o, o);
+                    })
+                    .remove();
+
+                nodes.forEach(d => {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
+                });
+            }
+
+            function click(event, d) {
+                event.stopPropagation();
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    d.children = d._children;
+                    d._children = null;
+                }
+                update(d);
+            }
+
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                    d._children.forEach(collapse);
+                }
+            }
+
+            function expand(d) {
+                if (d._children) {
+                    d.children = d._children;
+                    d._children = null;
+                    d.children.forEach(expand);
+                } else if (d.children) {
+                    d.children.forEach(expand);
+                }
+            }
+
+            function diagonal(s, d) {
+                return `M ${s.y + 130} ${s.x}
+                        C ${(s.y + d.y + 260) / 2} ${s.x},
+                          ${(s.y + d.y) / 2} ${d.x},
+                          ${d.y - 130} ${d.x}`;
+            }
+
+            function getWrappedLines(label, width, textElement) {
+                if (!label) return [];
+                const tempTspan = d3.select(textElement).append("tspan");
+                const words = label.split(/\s+/);
+                const lines = [];
+                let currentLine = [];
+                words.forEach(word => {
+                    currentLine.push(word);
+                    tempTspan.text(currentLine.join(" "));
+                    if (tempTspan.node().getComputedTextLength() > width && currentLine.length > 1) {
+                        currentLine.pop();
+                        lines.push(currentLine.join(" "));
+                        currentLine = [word];
+                    }
+                });
+                lines.push(currentLine.join(" "));
+                tempTspan.remove();
+                return lines;
+            }
+
+            function updateText(selection) {
+                selection.selectAll("*").remove(); 
+                selection.each(function(d) {
+                    const textNode = d3.select(this);
+                    const data = d.data;
+                    let englishLines = [];
+                    let farsiLines = [];
+                    
+                    // Main text
+                    if (currentLanguage === 'en' || currentLanguage === 'both') {
+                        englishLines = getWrappedLines(data.name, 240, this);
+                    }
+                    if (currentLanguage === 'fa' || currentLanguage === 'both') {
+                        farsiLines = getWrappedLines(data.farsi, 240, this);
+                    }
+                    
+                    // Add definition if exists and language matches
+                    if (data.definition && (currentLanguage === 'en' || currentLanguage === 'both')) {
+                        const defLines = getWrappedLines(data.definition, 240, this);
+                        if (defLines.length > 0) {
+                            englishLines.push(""); // Empty line as separator
+                            englishLines = englishLines.concat(defLines);
+                        }
+                    }
+                    if (data.definitionFa && (currentLanguage === 'fa' || currentLanguage === 'both')) {
+                        const defLines = getWrappedLines(data.definitionFa, 240, this);
+                        if (defLines.length > 0) {
+                            farsiLines.push(""); // Empty line as separator
+                            farsiLines = farsiLines.concat(defLines);
+                        }
+                    }
+
+                    const totalLines = englishLines.length + farsiLines.length;
+                    const requiredHeight = Math.max(85, 22 + totalLines * 23);
+                    d3.select(this.parentNode).select('rect').attr('height', requiredHeight).attr('y', -requiredHeight/2);
+                    const startYOffset = -0.5 * (totalLines - 1);
+                    
+                    englishLines.forEach((line, i) => {
+                        textNode.append("tspan")
+                            .attr("class", "english-text")
+                            .attr("x", 0)
+                            .attr("dy", (i === 0 ? startYOffset : 1.2) + "em")
+                            .text(line);
+                    });
+                    
+                    let farsiStartDy = (englishLines.length > 0) ? 1.4 : startYOffset;
+                    farsiLines.forEach((line, i) => {
+                        textNode.append("tspan")
+                            .attr("class", "farsi-text")
+                            .attr("x", 0)
+                            .attr("dy", (i === 0 ? farsiStartDy : 1.2) + "em")
+                            .text(line);
+                    });
+                });
+            }
+
+            function changeLanguage(lang) {
+                currentLanguage = lang;
+                document.querySelectorAll('.controls .button-group:last-child button').forEach(b => b.classList.remove('active'));
+                document.getElementById(`btn-${lang}`).classList.add('active');
+                document.body.classList.toggle('ltr', lang === 'en');
+                update(root);
+            }
+
+            function convertNodeToXml(d3Node) {
+                const escapeXml = (text) => {
+                    if (!text) return '';
+                    return text.replace(/[<>&'"]/g, c => ({'<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;'}[c]));
+                };
+                const text = `${escapeXml(d3Node.data.farsi)} (${escapeXml(d3Node.data.name)})`;
+                let childrenXml = '';
+                const children = d3Node.children || d3Node._children;
+                if (children) {
+                    childrenXml = children.map(convertNodeToXml).join('\n');
+                }
+                return `<node TEXT="${text}">
+${childrenXml}
+</node>`;
+            }
+
+            function handleExport() {
+                const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0.1">
+${convertNodeToXml(root)}
+</map>`;
+                const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'strategic-management-complete.mm';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }
+
+            // --- Search Logic ---
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('btn-search');
+            const clearSearchBtn = document.getElementById('btn-clear-search');
+
+            function clearSearch() {
+                searchInput.value = '';
+                g.selectAll('.node.highlighted').classed('highlighted', false);
+                clearSearchBtn.style.display = 'none';
+                searchInput.placeholder = "جستجو در نقشه...";
+            }
+
+            function handleSearch() {
+                g.selectAll('.node.highlighted').classed('highlighted', false);
+                const term = searchInput.value.toLowerCase().trim();
+                if (term.length < 2) {
+                    clearSearch();
+                    return;
+                }
+                const matchedNodes = [];
+                root.each(node => {
+                    const nameMatch = node.data.name && node.data.name.toLowerCase().includes(term);
+                    const farsiMatch = node.data.farsi && node.data.farsi.toLowerCase().includes(term);
+                    const defMatch = node.data.definition && node.data.definition.toLowerCase().includes(term);
+                    const defFaMatch = node.data.definitionFa && node.data.definitionFa.toLowerCase().includes(term);
+                    if (nameMatch || farsiMatch || defMatch || defFaMatch) {
+                        matchedNodes.push(node);
+                    }
+                });
+                if (matchedNodes.length > 0) {
+                    root.children?.forEach(collapse);
+                    matchedNodes.forEach(node => {
+                        let current = node;
+                        while(current.parent) {
+                            if(current.parent._children) {
+                                current.parent.children = current.parent._children;
+                                current.parent._children = null;
+                            }
+                            current = current.parent;
+                        }
+                    });
+                    update(root);
+                    setTimeout(() => {
+                        g.selectAll('.node')
+                         .filter(d => matchedNodes.includes(d))
+                         .classed('highlighted', true);
+                    }, duration);
+                    clearSearchBtn.style.display = 'inline-flex';
+                } else {
+                    searchInput.value = '';
+                    searchInput.placeholder = "موردی یافت نشد!";
+                    setTimeout(() => { searchInput.placeholder = "جستجو در نقشه..."; }, 2500);
+                }
+            }
+
+            searchBtn.addEventListener('click', handleSearch);
+            clearSearchBtn.addEventListener('click', clearSearch);
+            searchInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+
+            // --- Theme Toggle Logic ---
+            const themeBtn = document.getElementById('btn-theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const sunIcon = `<path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path><circle cx="12" cy="12" r="5"></circle>`;
+            const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark');
+                    themeIcon.innerHTML = sunIcon;
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark');
+                    themeIcon.innerHTML = moonIcon;
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            themeBtn.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                setTheme(currentTheme === 'light' ? 'dark' : 'light');
+            });
+
+            // --- Fullscreen Logic ---
+            const fullscreenBtn = document.getElementById('btn-fullscreen');
+            const mainContainer = document.getElementById('main-container');
+            const fullscreenIcon = document.getElementById('fullscreen-icon');
+            const fullscreenText = document.getElementById('fullscreen-text');
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    mainContainer.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            function updateFullscreenButton() {
+                if (document.fullscreenElement) {
+                    fullscreenIcon.innerHTML = `<path d="M5 19h3a2 2 0 0 0 2-2v-3m0-6V5a2 2 0 0 0-2-2H5m14 0h-3a2 2 0 0 0-2 2v3m0 6v3a2 2 0 0 0 2 2h3"></path>`;
+                    fullscreenText.textContent = 'خروج';
+                } else {
+                    fullscreenIcon.innerHTML = `<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>`;
+                    fullscreenText.textContent = 'تمام‌صفحه';
+                }
+            }
+
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+
+            // --- Other Event Listeners ---
+            document.getElementById('btn-expand-all').addEventListener('click', () => { expand(root); update(root); });
+            document.getElementById('btn-collapse-all').addEventListener('click', () => { root.children?.forEach(collapse); update(root); });
+            document.getElementById('btn-en').addEventListener('click', () => changeLanguage('en'));
+            document.getElementById('btn-fa').addEventListener('click', () => changeLanguage('fa'));
+            document.getElementById('btn-both').addEventListener('click', () => changeLanguage('both'));
+            document.getElementById('btn-export-freemind').addEventListener('click', handleExport);
+
+            window.addEventListener('resize', () => {
+                width = container.node().getBoundingClientRect().width;
+                height = container.node().getBoundingClientRect().height;
+            });
+
+            // --- Initial Load ---
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (prefersDark) {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+
+            initialize();
+        };
+    </script>
+</body>
+</html>
+
