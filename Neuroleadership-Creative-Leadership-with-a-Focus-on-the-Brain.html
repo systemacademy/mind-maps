@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>نقشه ذهنی - نورولیدرشیپ: رهبری خلاق با تمرکز بر مغز</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --font-primary: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Light Theme */
+            --color-bg-light: #f8f9fa;
+            --color-surface-light: #ffffff;
+            --color-primary-light: #4f46e5; /* Indigo */
+            --color-secondary-light: #6366f1;
+            --color-text-dark: #1F2937;
+            --color-text-light: #ffffff;
+            --node-border-light: #D1D5DB;
+            --link-color-light: #D1D5DB;
+            --highlight-stroke-light: #fbbf24;
+            --highlight-fill-light: rgba(251, 191, 36, 0.1);
+            /* Dark Theme */
+            --color-bg-dark: #111827;
+            --color-surface-dark: #1F2937;
+            --color-primary-dark: #818cf8;
+            --color-secondary-dark: #a5b4fc;
+            --color-text-dark-theme: #E5E7EB;
+            --color-text-light-dark-theme: #111827;
+            --node-border-dark: #4B5563;
+            --link-color-dark: #4B5563;
+            --highlight-stroke-dark: #f59e0b;
+            --highlight-fill-dark: rgba(245, 158, 11, 0.15);
+            /* Default to Light Theme */
+            --color-bg: var(--color-bg-light);
+            --color-surface: var(--color-surface-light);
+            --color-primary: var(--color-primary-light);
+            --color-secondary: var(--color-secondary-light);
+            --color-text-on-primary: var(--color-text-light);
+            --color-text-on-surface: var(--color-text-dark);
+            --node-border: var(--node-border-light);
+            --link-color: var(--link-color-light);
+            --highlight-stroke: var(--highlight-stroke-light);
+            --highlight-fill: var(--highlight-fill-light);
+        }
+        .dark {
+            --color-bg: var(--color-bg-dark);
+            --color-surface: var(--color-surface-dark);
+            --color-primary: var(--color-primary-dark);
+            --color-secondary: var(--color-secondary-dark);
+            --color-text-on-primary: var(--color-text-light-dark-theme);
+            --color-text-on-surface: var(--color-text-dark-theme);
+            --node-border: var(--node-border-dark);
+            --link-color: var(--link-color-dark);
+            --highlight-stroke: var(--highlight-stroke-dark);
+            --highlight-fill: var(--highlight-fill-dark);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-primary);
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text-on-surface);
+            direction: rtl;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.ltr { direction: ltr; }
+        .container {
+            width: 100%;
+            height: 100%;
+            background: var(--color-surface);
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s;
+        }
+        .container:fullscreen {
+            height: 100vh;
+        }
+        .container:fullscreen header,
+        .container:fullscreen .description,
+        .container:fullscreen footer {
+            display: none;
+        }
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: var(--color-text-on-primary);
+            padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .subtitle { font-size: 1rem; opacity: 0.9; }
+        .description {
+            padding: 15px;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--node-border);
+            line-height: 1.8;
+            flex-shrink: 0;
+            overflow-y: auto;
+            max-height: 150px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .description p { 
+            text-align: right; 
+            margin-bottom: 10px;
+        }
+        .description p:last-child {
+             margin-bottom: 0;
+        }
+        body.ltr .description p { 
+            text-align: left; 
+        }
+        .controls {
+            padding: 10px;
+            background: var(--color-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid var(--node-border);
+            flex-shrink: 0;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+        }
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        #search-input {
+            border: 1px solid var(--node-border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 14px;
+            background-color: var(--color-surface);
+            color: var(--color-text-on-surface);
+            transition: all 0.3s;
+            width: 100%;
+        }
+        #search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        .dark #search-input:focus {
+            box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+        button {
+            background: var(--color-secondary);
+            color: var(--color-text-on-primary);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        button:hover {
+            background: var(--color-primary);
+            transform: translateY(-2px);
+        }
+        button.active {
+            background: var(--color-primary);
+        }
+        #mindmap-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--color-bg);
+            min-height: 0;
+            transition: background-color 0.3s;
+        }
+        #mindmap-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .node rect {
+            cursor: pointer;
+            stroke: var(--node-border);
+            fill: var(--color-surface);
+            stroke-width: 1.5px;
+            rx: 8;
+            ry: 8;
+            transition: all 0.3s ease;
+        }
+        .node.highlighted > rect {
+            stroke: var(--highlight-stroke);
+            fill: var(--highlight-fill);
+            stroke-width: 2.5px;
+        }
+        .node .node-text {
+            font-size: 14px;
+            pointer-events: none;
+            fill: var(--color-text-on-surface);
+        }
+        .node .farsi-text {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .node-main rect {
+            fill: var(--color-primary);
+        }
+        .node-main .node-text {
+            fill: var(--color-text-on-primary);
+            font-weight: bold;
+        }
+        .link {
+            fill: none;
+            stroke: var(--link-color);
+            stroke-opacity: 0.8;
+            stroke-width: 2px;
+            transition: stroke 0.3s;
+        }
+        .toggle-circle {
+            cursor: pointer;
+            stroke: var(--color-secondary);
+            stroke-width: 1.5px;
+            fill: var(--color-surface);
+        }
+        .toggle-plus {
+             fill: var(--color-text-on-surface);
+        }
+        footer {
+            text-align: center;
+            padding: 15px 10px;
+            background: var(--color-secondary);
+            color: var(--color-text-on-primary);
+            font-size: 14px;
+            flex-shrink: 0;
+            transition: background 0.3s, color 0.3s;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .footer-link {
+            color: var(--color-text-on-primary);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s, text-decoration 0.3s;
+        }
+        .footer-link:hover {
+            color: var(--color-text-on-primary);
+            text-decoration: underline;
+            opacity: 0.9;
+        }
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            .controls {
+                gap: 8px;
+                padding: 8px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .button-group, .search-group {
+                justify-content: center;
+                width: 100%;
+            }
+            #search-input {
+                flex-grow: 1;
+            }
+            button {
+                padding: 6px 8px;
+                font-size: 11px;
+                gap: 4px;
+                flex-grow: 1;
+            }
+            .button-group button {
+                flex-basis: auto;
+            }
+            .description {
+                max-height: 100px;
+                padding: 10px;
+                font-size: 12px;
+            }
+            footer {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <header>
+            <h1>نورولیدرشیپ: رهبری خلاق با تمرکزبر مغز</h1>
+            <div class="subtitle">Neuroleadership: Creative Leadership with a Focus on the Brain</div>
+        </header>
+        <div class="description">
+            <p>این نقشه ذهنی، ساختار کامل کتاب «نورولیدرشیپ: رهبری خلاق با تمرکز بر مغز» نوشته جیمز تبول و فیلیپ دامیر را به تصویر می‌کشد و تمام مفاهیم، اصول، فصول، تعاریف و چارچوب‌های علم عصبی در رهبری را پوشش می‌دهد.</p>
+            <p>This mind map illustrates the complete structure of "Neuroleadership: Creative Leadership with a Focus on the Brain" by James Teboul and Philippe Damier, covering all concepts, principles, chapters, definitions, and neuroscience frameworks in leadership.</p>
+        </div>
+        <div class="controls">
+            <div class="search-group">
+                <input type="text" id="search-input" placeholder="جستجو در نقشه...">
+                <button id="btn-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+                <button id="btn-clear-search" style="display: none;">پاک کردن</button>
+            </div>
+            <div class="button-group">
+                <button id="btn-expand-all">باز کردن همه</button>
+                <button id="btn-collapse-all">بستن همه</button>
+                <button id="btn-fullscreen">
+                    <svg id="fullscreen-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <span id="fullscreen-text">تمام‌صفحه</span>
+                </button>
+                <button id="btn-export-freemind">خروجی FreeMind</button>
+            </div>
+            <div class="button-group">
+                <button id="btn-theme-toggle">
+                    <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+                </button>
+                <button id="btn-en">English</button>
+                <button id="btn-fa">فارسی</button>
+                <button id="btn-both" class="active">دو زبانه</button>
+            </div>
+        </div>
+        <div id="mindmap-container">
+            <svg id="mindmap-svg"></svg>
+        </div>
+        <footer>
+            <p>نقشه ذهنی نورولیدرشیپ: رهبری خلاق با تمرکز بر مغز | <a href="https://saadattalab.ir/" class="footer-link" target="_blank">وبسایت شخصی سعید سعادت‌طلب</a></p>
+        </footer>
+    </div>
+    <script>
+        window.onload = function() {
+            const mindmapData = {
+                name: "Neuroleadership: Creative Leadership with a Focus on the Brain",
+                farsi: "نورولیدرشیپ: رهبری خلق با تمرکز بر مغز",
+                children: [
+                    {
+                        name: "Part One: Foundations of Neuroleadership",
+                        farsi: "بخش اول: مبانی نورولیدرشیپ",
+                        children: [
+                            {
+                                name: "Chapter 1: Leadership, Followership, and Context",
+                                farsi: "فصل ۱: رهبری، پیروی و زمینه",
+                                children: [
+                                    {
+                                        name: "The Process of Leadership",
+                                        farsi: "فرآیند رهبری",
+                                        definition: "Leadership is not just about what leaders do but how they engage followers and shape the context. It's a relational process.",
+                                        definitionFa: "رهبری فقط درباره آنچه رهبران انجام می‌دهند نیست، بلکه درباره نحوه تعامل آنها با پیروان و شکل‌دهی به زمینه است. این یک فرآیند رابطه‌ای است."
+                                    },
+                                    {
+                                        name: "Too Much Attention to the Leader",
+                                        farsi: "توجه بیش از حد به رهبر",
+                                        definition: "Our brain simplifies complex situations by focusing on key actors, often exaggerating their capabilities and authority.",
+                                        definitionFa: "مغز ما موقعیت‌های پیچیده را با تمرکز بر چند بازیگر کلیدی ساده می‌کند و اغلب قابلیت‌ها و اختیارات آن‌ها را بزرگنمایی می‌کند."
+                                    },
+                                    {
+                                        name: "Relational Engagement",
+                                        farsi: "تعامل رابطه‌ای",
+                                        definition: "Building trust, commitment, and mutual adjustment between leaders and followers.",
+                                        definitionFa: "ایجاد اعتماد، تعهد و تنظیم متقابل بین رهبران و پیروان."
+                                    },
+                                    {
+                                        name: "Learning Culture",
+                                        farsi: "فرهنگ یادگیری",
+                                        definition: "A culture where continuous learning, feedback, and adaptation are prioritized over transactional exchanges.",
+                                        definitionFa: "فرهنگی که یادگیری مستمر، بازخورد و تطبیق را بر تبادلات معاملاتی اولویت می‌دهد."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 2: The Brain in Three Dimensions",
+                                farsi: "فصل ۲: مغز در سه بعد",
+                                children: [
+                                    {
+                                        name: "Vertical Integration",
+                                        farsi: "یکپارچه‌سازی عمودی",
+                                        definition: "The brain functions as an integrated system from the brainstem to the cortex, not isolated parts.",
+                                        definitionFa: "مغز به عنوان یک سیستم یکپارچه از ساقه مغز تا قشر عمل می‌کند، نه اجزای منزوی."
+                                    },
+                                    {
+                                        name: "Brain Stem",
+                                        farsi: "ساقه مغز",
+                                        definition: "Controls basic life functions like breathing and heart rate. Represents primal survival instincts.",
+                                        definitionFa: "کنترل توابع اساسی حیات مثل تنفس و ضربان قلب. نماینده غرایز ابتدایی بقا است."
+                                    },
+                                    {
+                                        name: "Limbic Area",
+                                        farsi: "منطقه لیمبیک",
+                                        definition: "Seat of emotions, memory, and motivation. Includes amygdala (fear), hippocampus (memory), and nucleus accumbens (reward).",
+                                        definitionFa: "مرکز احساسات، حافظه و انگیزه. شامل آمیگدال (ترس)، هیپوکمپوس (حافظه) و هسته آکومبنس (پاداش) است."
+                                    },
+                                    {
+                                        name: "Cortex",
+                                        farsi: "قشر",
+                                        definition: "Center for higher-order thinking, reasoning, planning, and conscious decision-making. Divided into frontal, parietal, temporal, and occipital lobes.",
+                                        definitionFa: "مرکز تفکر سطح بالا، استدلال، برنامه‌ریزی و تصمیم‌گیری آگاه. به بخش‌های پیشانی، تمپورال، پس‌سری و آهیانه تقسیم می‌شود."
+                                    },
+                                    {
+                                        name: "Corpus Callosum",
+                                        farsi: "جسم پینه‌ای",
+                                        definition: "Connects the two hemispheres, allowing communication and integration of information.",
+                                        definitionFa: "دو نیمکره را متصل می‌کند و امکان ارتباط و یکپارچه‌سازی اطلاعات را فراهم می‌کند."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 3: The Conscious Mind",
+                                farsi: "فصل ۳: ذهن آگاه",
+                                children: [
+                                    {
+                                        name: "Working Memory Limitation",
+                                        farsi: "محدودیت حافظه کوتاه‌مدت",
+                                        definition: "Can hold only 7±2 items, but effectively only 3 can be processed at once. This limits multitasking.",
+                                        definitionFa: "می‌تواند فقط 7±2 مورد را نگه دارد، اما موثر فقط 3 مورد به صورت همزمان پردازش می‌شوند. این چندوظیفگی را محدود می‌کند."
+                                    },
+                                    {
+                                        name: "7/3 Rule",
+                                        farsi: "قانون 7/3",
+                                        definition: "Consider up to seven elements but work and deliberate with only three.",
+                                        definitionFa: "حداکثر هفت عنصر را در نظر بگیرید اما فقط با سه تا کار کنید و درباره آن‌ها تصمیم بگیرید."
+                                    },
+                                    {
+                                        name: "Attention",
+                                        farsi: "توجه",
+                                        definition: "Commanding attention is crucial for learning and effective communication. Without it, no access to long-term memory.",
+                                        definitionFa: "جلب توجه برای یادگیری و ارتباط مؤثر حیاتی است. بدون آن، دسترسی به حافظه بلندمدت وجود ندارد."
+                                    },
+                                    {
+                                        name: "Emotion",
+                                        farsi: "احساس",
+                                        definition: "Emotions amplify the salience of information, making it more memorable and impactful.",
+                                        definitionFa: "احساسات بر برجستگی اطلاعات تأثیر می‌گذارند و آن‌ها را به یادماندنی‌تر و تأثیرگذارتر می‌کنند."
+                                    },
+                                    {
+                                        name: "Connection",
+                                        farsi: "اتصال",
+                                        definition: "Linking new information to existing mental models or personal interests enhances understanding and retention.",
+                                        definitionFa: "ارتباط دادن اطلاعات جدید به مدل‌های ذهنی موجود یا علایق شخصی، درک و حفظ را افزایش می‌دهد."
+                                    },
+                                    {
+                                        name: "Spacing",
+                                        farsi: "فاصله‌گذاری",
+                                        definition: "Spaced repetition over time is far more effective for long-term learning than cramming.",
+                                        definitionFa: "تکرار با فاصله زمانی برای یادگیری بلندمدت بسیار مؤثرتر از یادگیری یکجا است."
+                                    },
+                                    {
+                                        name: "ACES Model",
+                                        farsi: "مدل ACES",
+                                        definition: "Attention, Connection, Emotion, Spacing – the four steps for efficient brain-based learning.",
+                                        definitionFa: "توجه، اتصال، احساس، فاصله‌گذاری - چهار مرحله برای یادگیری کارآمد مبتنی بر مغز."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 4: The Unconscious Mind",
+                                farsi: "فصل ۴: ذهن ناخودآگاه",
+                                children: [
+                                    {
+                                        name: "Habits and Automaticity",
+                                        farsi: "عادات و خودکارسازی",
+                                        definition: "Most behavior is driven by unconscious habits formed through repetition, conserving cognitive energy.",
+                                        definitionFa: "اکثر رفتارها توسط عادت‌های ناخودآگاه تشکیل‌شده از طریق تکرار هدایت می‌شوند و انرژی شناختی را صرفه‌جویی می‌کنند."
+                                    },
+                                    {
+                                        name: "Biases",
+                                        farsi: "سوگیری‌ها",
+                                        definition: "Systematic errors in thinking due to mental shortcuts (heuristics), such as confirmation bias or anchoring.",
+                                        definitionFa: "خطاهای نظام‌مند در تفکر به دلیل میان‌برهای ذهنی (هیوریستیک)، مانند سوگیری تأیید یا لنگر انداختن."
+                                    },
+                                    {
+                                        name: "Fear Circuit",
+                                        farsi: "مدار ترس",
+                                        children: [
+                                            { name: "Amygdala", farsi: "آمیگدال", definition: "The alarm system that triggers fight-or-flight response.", definitionFa: "سیستم هشدار که واکنش جنگ یا گریز را فعال می‌کند." },
+                                            { name: "Threat Detection", farsi: "تشخیص تهدید", definition: "The amygdala reacts faster than the cortex, causing emotional hijacking.", definitionFa: "آمیگدال سریع‌تر از قشر واکنش نشان می‌دهد و باعث ربوده شدن عاطفی می‌شود." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Reward System",
+                                        farsi: "سیستم پاداش",
+                                        children: [
+                                            { name: "Nucleus Accumbens", farsi: "هسته آکومبنس", definition: "Releases dopamine for rewards, driving motivation and pleasure.", definitionFa: "دופامین را برای پاداش‌ها آزاد می‌کند و انگیزه و لذت را تحریک می‌کند." },
+                                            { name: "Dopamine", farsi: "دوفامین", definition: "Neurotransmitter associated with reward, anticipation, and addiction.", definitionFa: "نوروترانسمیتری که با پاداش، انتظار و اعتیاد مرتبط است." }
+                                        ]
+                                    },
+                                    {
+                                        name: "Insula",
+                                        farsi: "لوب اینولا",
+                                        definition: "Acts as a body sensor, monitoring internal state and contributing to self-awareness and empathy.",
+                                        definitionFa: "به عنوان حسگر بدن عمل می‌کند، وضعیت داخلی را نظارت می‌کند و به خودآگاهی و همدلی کمک می‌کند."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Two: Cognitive Functions and Leadership",
+                        farsi: "بخش دوم: توابع شناختی و رهبری",
+                        children: [
+                            {
+                                name: "Chapter 5: Rational Thinking",
+                                farsi: "فصل ۵: تفکر عقلانی",
+                                children: [
+                                    {
+                                        name: "Predictive Intelligence",
+                                        farsi: "هوش پیش‌بینی",
+                                        definition: "The brain's ability to create mental models of the world to anticipate future events and outcomes.",
+                                        definitionFa: "توانایی مغز برای ایجاد مدل‌های ذهنی از دنیا به منظور پیش‌بینی رویدادها و نتایج آینده."
+                                    },
+                                    {
+                                        name: "Mental Models",
+                                        farsi: "مدل‌های ذهنی",
+                                        definition: "Internal representations of reality that guide perception and action. Can become outdated and limit innovation.",
+                                        definitionFa: "نمایش‌های داخلی از واقعیت که ادراک و عمل را هدایت می‌کنند. ممکن است قدیمی شوند و نوآوری را محدود کنند."
+                                    },
+                                    {
+                                        name: "Cognitive Biases in Decision-Making",
+                                        farsi: "سوگیری‌های شناختی در تصمیم‌گیری",
+                                        children: [
+                                            { name: "Confirmation Bias", farsi: "سوگیری تأیید", definition: "Seeking information that confirms pre-existing beliefs.", definitionFa: "جستجوی اطلاعاتی که باورهای قبلی را تأیید می‌کند." },
+                                            { name: "Anchoring", farsi: "لنگر انداختن", definition: "Relying too heavily on the first piece of information encountered.", definitionFa: "متکی بودن بیش از حد به اولین اطلاعاتی که مواجه می‌شویم." },
+                                            { name: "Overconfidence", farsi: "افراط در اطمینان", definition: "Having excessive confidence in one's own answers to questions.", definitionFa: "اعتماد بیش از حد به پاسخ‌های خود به سوالات." },
+                                            { name: "Loss Aversion", farsi: "هرج و مرج نسبت به زیان", definition: "Losses hurt more than equivalent gains feel good.", definitionFa: "ضررها بیش از سودهای معادل احساس خوبی ایجاد می‌کنند." }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 6: Strategic Thinking",
+                                farsi: "فصل ۶: تفکر استراتژیک",
+                                children: [
+                                    {
+                                        name: "Strategic vs. Operational Thinking",
+                                        farsi: "تفکر استراتژیک در مقابل عملیاتی",
+                                        definition: "Strategic thinking focuses on long-term vision and big picture, while operational thinking deals with immediate tasks.",
+                                        definitionFa: "تفکر استراتژیک بر چشم‌انداز بلندمدت و تصویر کلی تمرکز دارد، در حالی که تفکر عملیاتی با وظایف فوری سروکار دارد."
+                                    },
+                                    {
+                                        name: "Innovation and Creativity",
+                                        farsi: "نوآوری و خلاقیت",
+                                        definition: "Creativity arises from connecting distant ideas. Requires psychological safety and freedom from fear.",
+                                        definitionFa: "خلاقیت از اتصال ایده‌های دور ایجاد می‌شود. نیازمند ایمنی روان‌شناختی و آزادی از ترس است."
+                                    },
+                                    {
+                                        name: "Managing Complexity",
+                                        farsi: "مدیریت پیچیدگی",
+                                        definition: "Breaking down complexity into manageable chunks using clear narratives and visualizations.",
+                                        definitionFa: "تجزیه پیچیدگی به بخش‌های قابل مدیریت با استفاده از روایت‌ها و نمایش‌های واضح."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 7: Leadership Style",
+                                farsi: "فصل ۷: سبک رهبری",
+                                children: [
+                                    {
+                                        name: "Leader's Personal Commitment",
+                                        farsi: "تعهد شخصی رهبر",
+                                        definition: "Authentic leadership requires genuine belief in the vision and walking the talk.",
+                                        definitionFa: "رهبری اصیل نیازمند باور واقعی به چشم‌انداز و حرکت مطابق گفتار است."
+                                    },
+                                    {
+                                        name: "Sharing the Vision",
+                                        farsi: "به اشتراک‌گذاری چشم‌انداز",
+                                        definition: "Communicating a compelling story that resonates with followers' values and motivations.",
+                                        definitionFa: "ارتباط یک داستان جذاب که با ارزش‌ها و انگیزه‌های پیروان هم‌آوا است."
+                                    },
+                                    {
+                                        name: "Mass Empowerment",
+                                        farsi: "توانمندسازی جمعی",
+                                        definition: "Everyone is seen as a potential leader, fostering ownership and initiative.",
+                                        definitionFa: "همه به عنوان رهبر بالقوه دیده می‌شوند و مالکیت و ابتکار را تقویت می‌کنند."
+                                    },
+                                    {
+                                        name: "Narrative and Storytelling",
+                                        farsi: "روایت و داستان‌سرایی",
+                                        definition: "Stories help make sense of complex strategies and create shared meaning.",
+                                        definitionFa: "داستان‌ها به درک استراتژی‌های پیچیده کمک می‌کنند و معنای مشترک ایجاد می‌کنند."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Three: Creating the Right Environment",
+                        farsi: "بخش سوم: ایجاد محیط مناسب",
+                        children: [
+                            {
+                                name: "Chapter 8: Establishing the Right Context and Culture",
+                                farsi: "فصل ۸: ایجاد زمینه و فرهنگ مناسب",
+                                children: [
+                                    {
+                                        name: "Hiring the Right People",
+                                        farsi: " استخدام افراد مناسب",
+                                        definition: "Look for curiosity, adaptability, and relational skills beyond technical expertise.",
+                                        definitionFa: "به دنبال کنجکاوی، انعطاف‌پذیری و مهارت‌های رابطه‌ای فراتر از تخصص فنی باشید."
+                                    },
+                                    {
+                                        name: "Setting up the Proper Context",
+                                        farsi: "تنظیم زمینه مناسب",
+                                        definition: "Designing physical and social environments that promote focus, collaboration, and well-being.",
+                                        definitionFa: "طراحی محیط‌های فیزیکی و اجتماعی که تمرکز، همکاری و رفاه را ترویج می‌کنند."
+                                    },
+                                    {
+                                        name: "Practicing Relational Engagement",
+                                        farsi: "تمرین تعامل رابطه‌ای",
+                                        definition: "Avoid indifference, manipulation, and concealment; respond immediately when help is needed.",
+                                        definitionFa: "از بی‌تفاوتی، دستکاری و پنهان‌کاری اجتناب کنید؛ هنگام نیاز به کمک، بلافاصله پاسخ دهید."
+                                    },
+                                    {
+                                        name: "Practicing a Learning Culture",
+                                        farsi: "تمرین فرهنگ یادگیری",
+                                        definition: "Encourage experimentation, learning from failure, and knowledge sharing without blame.",
+                                        definitionFa: "آزمایش، یادگیری از شکست و اشتراک دانش بدون سرزنش را تشویق کنید."
+                                    },
+                                    {
+                                        name: "Orchestrating the Whole",
+                                        farsi: "هماهنگی کل",
+                                        definition: "Ensuring all parts of the organization move cohesively toward the common goal.",
+                                        definitionFa: "تضمین هماهنگی همه بخش‌های سازمان برای حرکت به سمت هدف مشترک."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 9: Leadership of Collaboration and Learning",
+                                farsi: "فصل ۹: رهبری همکاری و یادگیری",
+                                children: [
+                                    {
+                                        name: "Collaborative Leadership",
+                                        farsi: "رهبری مشارکتی",
+                                        definition: "Leaders act as facilitators and coaches rather than sole decision-makers.",
+                                        definitionFa: "رهبران به عنوان تسهیل‌گران و مربی عمل می‌کنند نه تصمیم‌گیرندگان تنها."
+                                    },
+                                    {
+                                        name: "Learning Organization",
+                                        farsi: "سازمان یادگیرنده",
+                                        definition: "An organization that continuously learns, adapts, and transforms based on experience.",
+                                        definitionFa: "سازمانی که به طور مداوم از تجربه یاد می‌گیرد، تطبیق می‌یابد و تحول می‌یابد."
+                                    },
+                                    {
+                                        name: "Psychological Safety",
+                                        farsi: "ایمنی روان‌شناختی",
+                                        definition: "A climate where people feel safe to take risks, voice opinions, and report mistakes.",
+                                        definitionFa: "فضایی که در آن افراد احساس ایمنی می‌کنند تا ریسک کنند، نظر بدهند و اشتباهات را گزارش دهند."
+                                    },
+                                    {
+                                        name: "Feedback Loops",
+                                        farsi: "حلقه‌های بازخورد",
+                                        definition: "Regular, constructive feedback is essential for individual and organizational growth.",
+                                        definitionFa: "بازخورد منظم و سازنده برای رشد فردی و سازمانی ضروری است."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Part Four: Applications and Conclusion",
+                        farsi: "بخش چهارم: کاربردها و نتیجه‌گیری",
+                        children: [
+                            {
+                                name: "Chapter 10: Accepting Our Brain as It Is",
+                                farsi: "فصل ۱۰: پذیرش مغز ما به همان شکلی که هست",
+                                children: [
+                                    {
+                                        name: "Back to the Overall Picture",
+                                        farsi: "بازگشت به تصویر کلی",
+                                        definition: "Integrate insights from neuroscience into a holistic view of human behavior in organizations.",
+                                        definitionFa: "بینش‌های علوم اعصاب را در یک دیدگاه کل‌نگر از رفتار انسانی در سازمان‌ها یکپارچه کنید."
+                                    },
+                                    {
+                                        name: "A Brain with Some Pitfalls",
+                                        farsi: "مغزی با برخی موانع",
+                                        definition: "Acknowledge limitations like cognitive biases, emotional hijacking, and limited attention.",
+                                        definitionFa: "محدودیت‌هایی مانند سوگیری‌های شناختی، ربوده شدن عاطفی و توجه محدود را بپذیرید."
+                                    },
+                                    {
+                                        name: "Implications for Leadership",
+                                        farsi: "پیامدها برای رهبری",
+                                        definition: "Design processes and cultures that account for brain science to enhance performance.",
+                                        definitionFa: "فرآیندها و فرهنگ‌هایی طراحی کنید که از علوم مغز استفاده کنند تا عملکرد را بهبود بخشند."
+                                    }
+                                ]
+                            },
+                            {
+                                name: "Chapter 11: Netflix’s Innovative Approach",
+                                farsi: "فصل ۱۱: رویکرد نوآورانه نتفلیکس",
+                                children: [
+                                    {
+                                        name: "Culture of Freedom and Responsibility",
+                                        farsi: "فرهنگ آزادی و مسئولیت",
+                                        definition: "Employees have high autonomy but are held to very high performance standards.",
+                                        definitionFa: "کارکنان استقلال بالایی دارند اما به استانداردهای عملکردی بسیار بالا متکی هستند."
+                                    },
+                                    {
+                                        name: "Talent Density",
+                                        farsi: "تراکم استعداد",
+                                        definition: "Prioritizing hiring exceptional talent to maintain high performance.",
+                                        definitionFa: "اولویت‌دادن به استخدام استعدادهای استثنایی برای حفظ عملکرد بالا."
+                                    },
+                                    {
+                                        name: "Context over Control",
+                                        farsi: "زمینه به جای کنترل",
+                                        definition: "Managers provide context and purpose, not detailed instructions.",
+                                        definitionFa: "مدیران زمینه و هدف فراهم می‌کنند، نه دستورالعمل‌های دقیق."
+                                    },
+                                    {
+                                        name: "Radical Honesty",
+                                        farsi: "صداقت افراطی",
+                                        definition: "Open, direct feedback is encouraged to foster transparency and growth.",
+                                        definitionFa: "بازخورد باز و مستقیم برای ترویج شفافیت و رشد تشویق می‌شود."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Key Concepts and Frameworks",
+                        farsi: "مفاهیم و چارچوب‌های کلیدی",
+                        children: [
+                            {
+                                name: "Big Five Personality Traits",
+                                farsi: "پنج ویژگی بزرگ شخصیت",
+                                children: [
+                                    { name: "Openness", farsi: "بازبودن به تجربه", definition: "Curiosity, creativity, open to new ideas.", definitionFa: "کنجکاوی، خلاقیت، باز بودن به ایده‌های جدید." },
+                                    { name: "Conscientiousness", farsi: "وجدان‌گرایی", definition: "Self-discipline, organization, dependability.", definitionFa: "خودضابطی، سازمان‌یافتگی، قابل اعتماد بودن." },
+                                    { name: "Extraversion", farsi: "برون‌گرایی", definition: "Energy from social interaction, assertiveness.", definitionFa: "انرژی از تعامل اجتماعی، بیان‌گری." },
+                                    { name: "Agreeableness", farsi: "مسالمت‌جویی", definition: "Cooperation, empathy, kindness.", definitionFa: "همکاری، همدلی، مهربانی." },
+                                    { name: "Neuroticism", farsi: "نوروزشناختی", definition: "Tendency towards anxiety, depression, mood swings.", definitionFa: "تمایل به اضطراب، افسردگی، نوسانات خلقی." }
+                                ]
+                            },
+                            {
+                                name: "ACES Model of Learning",
+                                farsi: "مدل ACES یادگیری",
+                                children: [
+                                    { name: "Attention", farsi: "توجه", definition: "Focus on the task.", definitionFa: "تمرکز بر وظیفه." },
+                                    { name: "Connection", farsi: "اتصال", definition: "Link to prior knowledge.", definitionFa: "ارتباط با دانش قبلی." },
+                                    { name: "Emotion", farsi: "احساس", definition: "Engage feelings.", definitionFa: "درگیر کردن احساسات." },
+                                    { name: "Spacing", farsi: "فاصله‌گذاری", definition: "Repeat over time.", definitionFa: "تکرار در طول زمان." }
+                                ]
+                            },
+                            {
+                                name: "Two Benchmark Leadership Models",
+                                farsi: "دو مدل مرجع رهبری",
+                                children: [
+                                    { name: "Traditional Top-Down", farsi: "سلسله مراتبی سنتی", definition: "Hierarchical, command-and-control, focused on efficiency.", definitionFa: "سلسله مراتبی، دستور و کنترل، تمرکز بر کارایی." },
+                                    { name: "Creative Networked", farsi: "شبکه‌ای خلاق", definition: "Decentralized, collaborative, focused on innovation.", definitionFa: "غیرمتمرکز، مشارکتی، تمرکز بر نوآوری." }
+                                ]
+                            },
+                            {
+                                name: "Annexes and Appendices",
+                                farsi: "پیوست‌ها",
+                                children: [
+                                    { name: "Annex 1: Handbook", farsi: "پیوست ۱: راهنما", definition: "Practical guide for applying neuroleadership principles.", definitionFa: "راهنمای عملی برای به کارگیری اصول نورولیدرشیپ." },
+                                    { name: "Annex 2: Big Five", farsi: "پیوست ۲: پنج بزرگ", definition: "Detailed explanation of the personality model.", definitionFa: "توضیحات دقیق مدل شخصیتی." },
+                                    { name: "Annex 3: Synapses", farsi: "پیوست ۳: سیناپس‌ها", definition: "How neural connections form and strengthen.", definitionFa: "چگونگی شکل‌گیری و تقویت اتصالات عصبی." },
+                                    { name: "Annex 4: Fear Circuit", farsi: "پیوست ۴: مدار ترس", definition: "Detailed anatomy of threat response.", definitionFa: "آناتومی دقیق پاسخ به تهدید." },
+                                    { name: "Annex 5: Reward System", farsi: "پیوست ۵: سیستم پاداش", definition: "Neural basis of motivation and pleasure.", definitionFa: "اساس عصبی انگیزه و لذت." },
+                                    { name: "Annex 6: Insula", farsi: "پیوست ۶: لوب اینولا", definition: "Role in interoception and empathy.", definitionFa: "نقش در حس درونی و همدلی." },
+                                    { name: "Annex 7: Habits", farsi: "پیوست ۷: عادات", definition: "Formation and breaking of automatic behaviors.", definitionFa: "تشکیل و شکستن رفتارهای خودکار." },
+                                    { name: "Annex 8: Biases", farsi: "پیوست ۸: سوگیری‌ها", definition: "Common cognitive distortions and how to mitigate them.", definitionFa: "歪‌نظرهای شناختی رایج و چگونگی کاهش آن‌ها." }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            let currentLanguage = 'both';
+            let i = 0;
+            const duration = 750;
+            let root;
+            const container = d3.select("#mindmap-container");
+            const svg = container.select("svg");
+            const g = svg.append("g");
+            let width, height;
+            const tree = d3.tree().nodeSize([140, 320]);
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 3])
+                .on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                });
+            svg.call(zoom);
+
+            function initialize() {
+                width = container.node().getBoundingClientRect().width;
+                height = container.node().getBoundingClientRect().height;
+                root = d3.hierarchy(mindmapData, d => d.children);
+                root.x0 = height / 2;
+                root.y0 = 0;
+                root.children?.forEach(collapse);
+                update(root);
+                centerView();
+            }
+
+            function centerView() {
+                if(!width || !height) return;
+                const initialScale = window.innerWidth < 768 ? 0.3 : 0.6;
+                const initialTranslateX = window.innerWidth < 768 ? width * 0.1 : width / 5;
+                svg.call(zoom.transform, d3.zoomIdentity.translate(initialTranslateX, height / 2).scale(initialScale));
+            }
+
+            function update(source) {
+                const treeLayout = tree(root);
+                const nodes = treeLayout.descendants();
+                const links = treeLayout.links();
+                nodes.forEach(d => { d.y = d.depth * 300; });
+
+                const node = g.selectAll("g.node")
+                    .data(nodes, d => d.id || (d.id = ++i));
+
+                const nodeEnter = node.enter().append("g")
+                    .attr("class", d => `node ${d.children ? "node--internal" : "node--leaf"} ${d.depth === 0 ? 'node-main' : ''}`)
+                    .attr("transform", d => `translate(${source.y0},${source.x0})`)
+                    .on("click", click);
+
+                nodeEnter.append("rect")
+                    .attr("width", 260)
+                    .attr("height", 85)
+                    .attr("x", -130)
+                    .attr("y", -42.5);
+
+                const textEnter = nodeEnter.append("text")
+                    .attr("class", "node-text")
+                    .attr("dy", "-0.5em")
+                    .attr("text-anchor", "middle");
+                updateText(textEnter);
+
+                const toggleEnter = nodeEnter.filter(d => d.children || d._children);
+                const toggleGroup = toggleEnter.append('g')
+                    .attr('class', 'toggle-group')
+                    .attr('transform', `translate(135, 0)`);
+                toggleGroup.append("circle")
+                    .attr("class", "toggle-circle")
+                    .attr("r", 13);
+                toggleGroup.append("text")
+                    .attr("class", "toggle-plus")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.3em")
+                    .attr("font-size", "20px")
+                    .text(d => d.children ? "−" : "+");
+
+                const nodeUpdate = nodeEnter.merge(node);
+                nodeUpdate.transition()
+                    .duration(duration)
+                    .attr("transform", d => `translate(${d.y},${d.x})`);
+                updateText(nodeUpdate.select('text'));
+                nodeUpdate.select('.toggle-group text')
+                   .text(d => d.children ? "−" : "+");
+
+                const nodeExit = node.exit().transition()
+                    .duration(duration)
+                    .attr("transform", d => `translate(${source.y},${source.x})`)
+                    .remove();
+                nodeExit.select("rect").style("opacity", 1e-6);
+                nodeExit.select("text").style("opacity", 1e-6);
+
+                const link = g.selectAll("path.link")
+                    .data(links, d => d.target.id);
+                const linkEnter = link.enter().insert("path", "g")
+                    .attr("class", "link")
+                    .attr("d", d => {
+                        const o = {x: source.x0, y: source.y0};
+                        return diagonal(o, o);
+                    });
+                link.merge(linkEnter).transition()
+                    .duration(duration)
+                    .attr("d", d => diagonal(d.source, d.target));
+                link.exit().transition()
+                    .duration(duration)
+                    .attr("d", d => {
+                        const o = {x: source.x, y: source.y};
+                        return diagonal(o, o);
+                    })
+                    .remove();
+
+                nodes.forEach(d => {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
+                });
+            }
+
+            function click(event, d) {
+                event.stopPropagation();
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    d.children = d._children;
+                    d._children = null;
+                }
+                update(d);
+            }
+
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                    d._children.forEach(collapse);
+                }
+            }
+
+            function expand(d) {
+                if (d._children) {
+                    d.children = d._children;
+                    d._children = null;
+                    d.children.forEach(expand);
+                } else if (d.children) {
+                    d.children.forEach(expand);
+                }
+            }
+
+            function diagonal(s, d) {
+                return `M ${s.y + 130} ${s.x}
+                        C ${(s.y + d.y + 260) / 2} ${s.x},
+                          ${(s.y + d.y) / 2} ${d.x},
+                          ${d.y - 130} ${d.x}`;
+            }
+
+            function getWrappedLines(label, width, textElement) {
+                if (!label) return [];
+                const tempTspan = d3.select(textElement).append("tspan");
+                const words = label.split(/\s+/);
+                const lines = [];
+                let currentLine = [];
+                words.forEach(word => {
+                    currentLine.push(word);
+                    tempTspan.text(currentLine.join(" "));
+                    if (tempTspan.node().getComputedTextLength() > width && currentLine.length > 1) {
+                        currentLine.pop();
+                        lines.push(currentLine.join(" "));
+                        currentLine = [word];
+                    }
+                });
+                lines.push(currentLine.join(" "));
+                tempTspan.remove();
+                return lines;
+            }
+
+            function updateText(selection) {
+                selection.selectAll("*").remove(); 
+                selection.each(function(d) {
+                    const textNode = d3.select(this);
+                    const data = d.data;
+                    let englishLines = [];
+                    let farsiLines = [];
+                    
+                    // Main text
+                    if (currentLanguage === 'en' || currentLanguage === 'both') {
+                        englishLines = getWrappedLines(data.name, 240, this);
+                    }
+                    if (currentLanguage === 'fa' || currentLanguage === 'both') {
+                        farsiLines = getWrappedLines(data.farsi, 240, this);
+                    }
+                    
+                    // Add definition if exists and language matches
+                    if (data.definition && (currentLanguage === 'en' || currentLanguage === 'both')) {
+                        const defLines = getWrappedLines(data.definition, 240, this);
+                        if (defLines.length > 0) {
+                            englishLines.push(""); // Empty line as separator
+                            englishLines = englishLines.concat(defLines);
+                        }
+                    }
+                    if (data.definitionFa && (currentLanguage === 'fa' || currentLanguage === 'both')) {
+                        const defLines = getWrappedLines(data.definitionFa, 240, this);
+                        if (defLines.length > 0) {
+                            farsiLines.push(""); // Empty line as separator
+                            farsiLines = farsiLines.concat(defLines);
+                        }
+                    }
+
+                    const totalLines = englishLines.length + farsiLines.length;
+                    const requiredHeight = Math.max(85, 22 + totalLines * 23);
+                    d3.select(this.parentNode).select('rect').attr('height', requiredHeight).attr('y', -requiredHeight/2);
+                    const startYOffset = -0.5 * (totalLines - 1);
+                    
+                    englishLines.forEach((line, i) => {
+                        textNode.append("tspan")
+                            .attr("class", "english-text")
+                            .attr("x", 0)
+                            .attr("dy", (i === 0 ? startYOffset : 1.2) + "em")
+                            .text(line);
+                    });
+                    
+                    let farsiStartDy = (englishLines.length > 0) ? 1.4 : startYOffset;
+                    farsiLines.forEach((line, i) => {
+                        textNode.append("tspan")
+                            .attr("class", "farsi-text")
+                            .attr("x", 0)
+                            .attr("dy", (i === 0 ? farsiStartDy : 1.2) + "em")
+                            .text(line);
+                    });
+                });
+            }
+
+            function changeLanguage(lang) {
+                currentLanguage = lang;
+                document.querySelectorAll('.controls .button-group:last-child button').forEach(b => b.classList.remove('active'));
+                document.getElementById(`btn-${lang}`).classList.add('active');
+                document.body.classList.toggle('ltr', lang === 'en');
+                update(root);
+            }
+
+            function convertNodeToXml(d3Node) {
+                const escapeXml = (text) => {
+                    if (!text) return '';
+                    return text.replace(/[<>&'"]/g, c => ({'<':'&lt;', '>':'&gt;', '&':'&amp;', "'":'&apos;', '"':'&quot;'}[c]));
+                };
+                const text = `${escapeXml(d3Node.data.farsi)} (${escapeXml(d3Node.data.name)})`;
+                let childrenXml = '';
+                const children = d3Node.children || d3Node._children;
+                if (children) {
+                    childrenXml = children.map(convertNodeToXml).join('\n');
+                }
+                return `<node TEXT="${text}">
+${childrenXml}
+</node>`;
+            }
+
+            function handleExport() {
+                const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0.1">
+${convertNodeToXml(root)}
+</map>`;
+                const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'neuroleadership-complete.mm';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }
+
+            // --- Search Logic ---
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('btn-search');
+            const clearSearchBtn = document.getElementById('btn-clear-search');
+
+            function clearSearch() {
+                searchInput.value = '';
+                g.selectAll('.node.highlighted').classed('highlighted', false);
+                clearSearchBtn.style.display = 'none';
+                searchInput.placeholder = "جستجو در نقشه...";
+            }
+
+            function handleSearch() {
+                g.selectAll('.node.highlighted').classed('highlighted', false);
+                const term = searchInput.value.toLowerCase().trim();
+                if (term.length < 2) {
+                    clearSearch();
+                    return;
+                }
+                const matchedNodes = [];
+                root.each(node => {
+                    const nameMatch = node.data.name && node.data.name.toLowerCase().includes(term);
+                    const farsiMatch = node.data.farsi && node.data.farsi.toLowerCase().includes(term);
+                    const defMatch = node.data.definition && node.data.definition.toLowerCase().includes(term);
+                    const defFaMatch = node.data.definitionFa && node.data.definitionFa.toLowerCase().includes(term);
+                    if (nameMatch || farsiMatch || defMatch || defFaMatch) {
+                        matchedNodes.push(node);
+                    }
+                });
+                if (matchedNodes.length > 0) {
+                    root.children?.forEach(collapse);
+                    matchedNodes.forEach(node => {
+                        let current = node;
+                        while(current.parent) {
+                            if(current.parent._children) {
+                                current.parent.children = current.parent._children;
+                                current.parent._children = null;
+                            }
+                            current = current.parent;
+                        }
+                    });
+                    update(root);
+                    setTimeout(() => {
+                        g.selectAll('.node')
+                         .filter(d => matchedNodes.includes(d))
+                         .classed('highlighted', true);
+                    }, duration);
+                    clearSearchBtn.style.display = 'inline-flex';
+                } else {
+                    searchInput.value = '';
+                    searchInput.placeholder = "موردی یافت نشد!";
+                    setTimeout(() => { searchInput.placeholder = "جستجو در نقشه..."; }, 2500);
+                }
+            }
+
+            searchBtn.addEventListener('click', handleSearch);
+            clearSearchBtn.addEventListener('click', clearSearch);
+            searchInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+
+            // --- Theme Toggle Logic ---
+            const themeBtn = document.getElementById('btn-theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const sunIcon = `<path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path><circle cx="12" cy="12" r="5"></circle>`;
+            const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark');
+                    themeIcon.innerHTML = sunIcon;
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.body.classList.remove('dark');
+                    themeIcon.innerHTML = moonIcon;
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            themeBtn.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                setTheme(currentTheme === 'light' ? 'dark' : 'light');
+            });
+
+            // --- Fullscreen Logic ---
+            const fullscreenBtn = document.getElementById('btn-fullscreen');
+            const mainContainer = document.getElementById('main-container');
+            const fullscreenIcon = document.getElementById('fullscreen-icon');
+            const fullscreenText = document.getElementById('fullscreen-text');
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    mainContainer.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            function updateFullscreenButton() {
+                if (document.fullscreenElement) {
+                    fullscreenIcon.innerHTML = `<path d="M5 19h3a2 2 0 0 0 2-2v-3m0-6V5a2 2 0 0 0-2-2H5m14 0h-3a2 2 0 0 0-2 2v3m0 6v3a2 2 0 0 0 2 2h3"></path>`;
+                    fullscreenText.textContent = 'خروج';
+                } else {
+                    fullscreenIcon.innerHTML = `<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>`;
+                    fullscreenText.textContent = 'تمام‌صفحه';
+                }
+            }
+
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+
+            // --- Other Event Listeners ---
+            document.getElementById('btn-expand-all').addEventListener('click', () => { expand(root); update(root); });
+            document.getElementById('btn-collapse-all').addEventListener('click', () => { root.children?.forEach(collapse); update(root); });
+            document.getElementById('btn-en').addEventListener('click', () => changeLanguage('en'));
+            document.getElementById('btn-fa').addEventListener('click', () => changeLanguage('fa'));
+            document.getElementById('btn-both').addEventListener('click', () => changeLanguage('both'));
+            document.getElementById('btn-export-freemind').addEventListener('click', handleExport);
+
+            window.addEventListener('resize', () => {
+                width = container.node().getBoundingClientRect().width;
+                height = container.node().getBoundingClientRect().height;
+            });
+
+            // --- Initial Load ---
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (prefersDark) {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+
+            initialize();
+        };
+    </script>
+</body>
+</html>
+
